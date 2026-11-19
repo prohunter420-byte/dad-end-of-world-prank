@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emergency Alert</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #0b0b0e;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+    }
+    .screen { padding: 24px; position: relative; z-index: 2; }
+    h1 { color: #ff3b30; font-size: clamp(2rem, 8vw, 5rem); margin: 0 0 12px; }
+    #timer { font: 700 clamp(3rem, 15vw, 8rem)/1 monospace; }
+    #message { font-size: clamp(1.2rem, 4vw, 2rem); min-height: 3em; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .celebrate h1 { color: #ffd166; }
+    .celebrate { animation: pulse 0.8s alternate infinite; }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.03); } }
+    canvas { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <main class="screen" id="screen">
+    <h1>⚠️ GLOBAL EMERGENCY ⚠️</h1>
+    <div id="timer">01:00</div>
+    <p id="message">Estimated time until impact:</p>
+    <button id="panic" type="button">Don't press this</button>
+  </main>
+
+  <script>
+    const timer = document.getElementById("timer");
+    const message = document.getElementById("message");
+    const screen = document.getElementById("screen");
+    const button = document.getElementById("panic");
+    let seconds = 60;
+    let revealed = false;
+
+    const countdown = setInterval(() => {
+      seconds--;
+      const min = Math.floor(seconds / 60);
+      const sec = String(seconds % 60).padStart(2, "0");
+      timer.textContent = `${String(min).padStart(2, "0")}:${sec}`;
+
+      if (seconds <= 0) reveal();
+    }, 1000);
+
+    button.addEventListener("click", () => {
+      message.textContent = "Emergency Dad Instructions: Close laptop. Check the fridge.";
+    });
+
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      clearInterval(countdown);
+      timer.textContent = "0:00";
+      screen.classList.add("celebrate");
+      message.innerHTML = "<strong>JUST KIDDING, DAD! 😄</strong><br>The world is fine. Your snacks may not be.";
+      button.textContent = "You survived!";
+      startConfetti();
+    }
+
+    function startConfetti() {
+      const canvas = document.getElementById("confetti");
+      const ctx = canvas.getContext("2d");
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+
+      const colors = ["#ff3b30", "#ffd166", "#06d6a0", "#118ab2", "#ef476f"];
+      const pieces = Array.from({ length: 180 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        w: 7 + Math.random() * 8,
+        h: 4 + Math.random() * 6,
+        speed: 2 + Math.random() * 5,
+        spin: Math.random() * 0.2,
+        angle: Math.random() * Math.PI,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.y += p.speed;
+          p.angle += p.spin;
+          if (p.y > canvas.height) p.y = -20;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.angle);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+  </script>
+</body>
+</html>
